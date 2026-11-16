@@ -76,3 +76,6 @@ class Livraria:
 
     def total_livros(self):
         return self._repo.catalogo.total()
+
+    def loja_existe(self, loja_id):
+        return self._repo.loja(loja_id) is not None
