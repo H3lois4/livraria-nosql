@@ -1,1 +1,0 @@
-# Testes automáticos do servidor
