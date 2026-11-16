@@ -2,4 +2,6 @@ flask
 gunicorn
 pymongo
 mongomock
+sqlalchemy
+psycopg[binary]
 pytest

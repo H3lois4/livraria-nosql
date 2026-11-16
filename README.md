@@ -1,12 +1,33 @@
-# Livraria – Cliente-Servidor com Cosmos DB for MongoDB (Exercício 10.1)
+# Livraria – Cliente-Servidor com Cosmos DB (NoSQL) e PostgreSQL (SQL) – Exercícios 10.1 e 10.2
 
 MVP da livraria na arquitetura **cliente-servidor** do exercício 8.1, agora com o
 **catálogo de livros em um banco NoSQL: Azure Cosmos DB for MongoDB**.
 
 ```
-Cliente (navegador)  ──HTTP/JSON──▶  Servidor Flask (API)  ──▶  Cosmos DB for MongoDB (catálogo)
-                                                            └─▶  TXT (lojas e preferências)
+Cliente (navegador)  ──HTTP/JSON──▶  Servidor Flask (API) ──▶ Cosmos DB for MongoDB (catálogo de livros)
+                                                          ├─▶ PostgreSQL (usuários)
+                                                          └─▶ TXT (lojas e preferências)
 ```
+
+## Banco SQL – usuários (PostgreSQL)
+
+- Tabela `usuarios` (`servidor/usuarios_sql.py`), criada automaticamente na primeira execução:
+
+| Coluna | Tipo | Regra |
+|---|---|---|
+| `id` | SERIAL | chave primária |
+| `nome` | VARCHAR(100) | obrigatório |
+| `email` | VARCHAR(150) | obrigatório e **único** |
+| `telefone` | VARCHAR(20) | opcional |
+| `cidade` | VARCHAR(80) | opcional |
+| `loja_favorita` | VARCHAR(30) | opcional (precisa ser uma loja existente) |
+| `criado_em` | TIMESTAMP | preenchido automaticamente |
+
+- Se a tabela estiver vazia, o servidor cadastra **4 usuários**. Pela tela **Usuários** do site
+  (ou por `POST /api/usuarios`) é possível cadastrar outros.
+- A conexão vem da variável `DATABASE_URL`
+  (`postgresql+psycopg://usuario:senha@servidor.postgres.database.azure.com:5432/livraria?sslmode=require`).
+  Sem ela, o app usa SQLite local com o mesmo código (SQLAlchemy).
 
 ## Banco NoSQL
 
@@ -40,6 +61,9 @@ Cliente (navegador)  ──HTTP/JSON──▶  Servidor Flask (API)  ──▶  
 | POST | `/api/livros` | Cadastra um livro no Cosmos DB |
 | GET | `/api/lojas` e `/api/lojas/<id>` | Lojas com endereço e horário |
 | GET/PUT | `/api/clientes/me/loja-favorita` | Loja favorita do cliente |
+| GET | `/api/usuarios` e `/api/usuarios/<id>` | Lista ou busca usuários (PostgreSQL) |
+| POST | `/api/usuarios` | Cadastra usuário |
+| PUT / DELETE | `/api/usuarios/<id>` | Atualiza ou remove usuário |
 
 Exemplo de cadastro:
 
@@ -58,6 +82,7 @@ no Azure App Service. Configurações do App Service:
 |---|---|
 | Comando de inicialização | `gunicorn --bind=0.0.0.0 --timeout 600 wsgi:app` |
 | `MONGODB_URI` | string de conexão do Cosmos DB for MongoDB |
+| `DATABASE_URL` | string de conexão do PostgreSQL |
 | `PASTA_DADOS` | `/home/data` |
 | `SCM_DO_BUILD_DURING_DEPLOYMENT` | `true` |
 
