@@ -7,13 +7,19 @@ from servidor import create_app
 DOM, HORA = "9788535902775", "9788501114775"
 
 
+def nova_engine():
+    from sqlalchemy import create_engine
+    from sqlalchemy.pool import StaticPool
+    return create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+
+
 def nova_colecao():
     return mongomock.MongoClient()["livraria"]["livros"]
 
 
 @pytest.fixture
 def http(tmp_path):
-    return create_app(tmp_path, colecao_livros=nova_colecao()).test_client()
+    return create_app(tmp_path, colecao_livros=nova_colecao(), engine_usuarios=nova_engine()).test_client()
 
 
 def test_buscar_livros(http):
@@ -81,7 +87,7 @@ def test_cliente_carrega_configuracao_da_api(http):
 
 
 def test_backend_sozinho_nao_entrega_o_cliente(tmp_path):
-    api = create_app(tmp_path, servir_cliente=False, colecao_livros=nova_colecao()).test_client()
+    api = create_app(tmp_path, servir_cliente=False, colecao_livros=nova_colecao(), engine_usuarios=nova_engine()).test_client()
     assert api.get("/").status_code == 404
     assert api.get("/api").json["servico"] == "API da Livraria"
 
