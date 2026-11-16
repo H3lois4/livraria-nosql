@@ -131,6 +131,64 @@ tela.addEventListener("click", async (e) => {
   }
 });
 
+// ---------- Usuários (banco PostgreSQL) ----------
+async function telaUsuarios() {
+  const usuarios = await api("/api/usuarios");
+  tela.innerHTML = `
+    <h1>Usuários</h1>
+    <p class="suave">Cadastro de clientes da livraria, salvo no banco PostgreSQL.</p>
+    <form class="formulario" id="form-usuario">
+      <label>Nome <input name="nome" required maxlength="100"></label>
+      <label>E-mail <input name="email" type="email" required maxlength="150"></label>
+      <label>Telefone <input name="telefone" maxlength="20" placeholder="(11) 90000-0000"></label>
+      <label>Cidade <input name="cidade" maxlength="80"></label>
+      <label>Loja favorita
+        <select name="loja_favorita">
+          <option value="">Nenhuma</option>
+          <option value="paulista">Livraria Paulista</option>
+          <option value="pinheiros">Livraria Pinheiros</option>
+        </select>
+      </label>
+      <button>Cadastrar usuário</button>
+    </form>
+    <h2>${usuarios.length} usuários cadastrados</h2>
+    <ul class="lista">${usuarios.map((u) => `
+      <li class="cartao">
+        <div class="linha">
+          <span class="titulo">${esc(u.nome)}</span>
+          <button class="secundario" data-remover-usuario="${u.id}">Remover</button>
+        </div>
+        <p>${esc(u.email)}${u.telefone ? " · " + esc(u.telefone) : ""}</p>
+        <p class="suave">${esc(u.cidade || "Cidade não informada")} · loja favorita: ${esc(u.loja_favorita || "nenhuma")} · desde ${esc(u.criado_em)}</p>
+      </li>`).join("")}
+    </ul>`;
+  document.getElementById("form-usuario").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const dados = Object.fromEntries(new FormData(e.target));
+    for (const campo of ["telefone", "cidade", "loja_favorita"]) if (!dados[campo]) dados[campo] = null;
+    try {
+      const novo = await api("/api/usuarios", { method: "POST", body: JSON.stringify(dados) });
+      await telaUsuarios();
+      mostrarAviso(`${novo.nome} foi cadastrado(a).`);
+    } catch (erro) {
+      mostrarAviso(erro.message, true);
+    }
+  });
+}
+
+tela.addEventListener("click", async (e) => {
+  const botao = e.target.closest("[data-remover-usuario]");
+  if (!botao) return;
+  try {
+    const resposta = await fetch(API + `/api/usuarios/${botao.dataset.removerUsuario}`, { method: "DELETE" });
+    if (!resposta.ok) throw new Error((await resposta.json()).erro);
+    await telaUsuarios();
+    mostrarAviso("Usuário removido.");
+  } catch (erro) {
+    mostrarAviso(erro.message, true);
+  }
+});
+
 // ---------- Navegação ----------
 async function rotear() {
   aviso.hidden = true;
@@ -140,6 +198,7 @@ async function rotear() {
     if (partes[0] === "livros" && partes[1]) await telaLivro(decodeURIComponent(partes[1]));
     else if (partes[0] === "lojas" && partes[1]) await telaLoja(decodeURIComponent(partes[1]));
     else if (partes[0] === "lojas") await telaLojas();
+    else if (partes[0] === "usuarios") await telaUsuarios();
     else await telaBusca(new URLSearchParams(consulta).get("q") || "");
   } catch (erro) {
     tela.innerHTML = `<h1>${esc(erro.message)}</h1><p><a href="#/">Voltar para a busca</a></p>`;

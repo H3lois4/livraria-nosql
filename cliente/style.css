@@ -34,3 +34,7 @@ button.secundario { background:var(--verde-claro); color:var(--verde); }
 .aviso.erro { background:#F6E3DF; color:var(--erro); }
 nav { flex-wrap:wrap; gap:6px 16px; }
 .carregando { color:var(--suave); }
+.formulario { display:grid; gap:12px; background:var(--folha); padding:16px; border-radius:8px; border:1px solid var(--linha); margin-bottom:8px; }
+.formulario label { display:grid; gap:6px; font-weight:600; }
+.formulario input, .formulario select { font:inherit; font-weight:400; padding:9px 10px; border:1px solid var(--linha); border-radius:8px; }
+.formulario button { justify-self:start; }
