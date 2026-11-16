@@ -1,0 +1,53 @@
+name: CI/CD - Livraria com Cosmos DB
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: livraria-nosql-heloisa
+
+jobs:
+  build:
+    name: CI - instalar e testar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Rodar testes
+        run: pytest -q
+
+      - name: Guardar o código para o deploy
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: |
+            app.py
+            wsgi.py
+            requirements.txt
+            servidor/
+            cliente/
+
+  deploy:
+    name: CD - deploy no Azure
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app
+
+      - name: Publicar no Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: .
